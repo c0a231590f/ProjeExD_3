@@ -2,11 +2,13 @@ import os
 import random
 import sys
 import time
+import math
 import pygame as pg
 
 WIDTH = 1100
 HEIGHT = 650
 NUM_OF_BOMBS = 5
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     yoko, tate = True, True
@@ -40,6 +42,7 @@ class Bird:
         self.img = __class__.imgs[(+5, 0)]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
+        self.dire = (+5, 0)  # 初期向きは右
 
     def change_img(self, num: int, screen: pg.Surface):
         self.img = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 0.9)
@@ -55,16 +58,18 @@ class Bird:
         if check_bound(self.rct) != (True, True):
             self.rct.move_ip(-sum_mv[0], -sum_mv[1])
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):
-            self.img = __class__.imgs[tuple(sum_mv)]
+            self.dire = tuple(sum_mv)
+            self.img = __class__.imgs[self.dire]
         screen.blit(self.img, self.rct)
 
 class Beam:
-    def __init__(self, bird:"Bird"):
-        self.img = pg.image.load("fig/beam.png")
+    def __init__(self, bird: "Bird"):
+        self.vx, self.vy = bird.dire
+        angle = math.degrees(math.atan2(-self.vy, self.vx))
+        self.img = pg.transform.rotozoom(pg.image.load("fig/beam.png"), angle, 1.0)
         self.rct = self.img.get_rect()
-        self.rct.centery = bird.rct.centery
-        self.rct.left = bird.rct.right
-        self.vx, self.vy = +5, 0
+        self.rct.centerx = bird.rct.centerx + bird.rct.width * self.vx // 5
+        self.rct.centery = bird.rct.centery + bird.rct.height * self.vy // 5
 
     def update(self, screen: pg.Surface):
         if check_bound(self.rct) == (True, True):
@@ -162,8 +167,7 @@ def main():
                     score.add(1)
 
         bombs = [b for b in bombs if b is not None]
-        beams = [b for b in beams if b is not None]
-        beams = [b for b in beams if check_bound(b.rct) == (True, True)]
+        beams = [b for b in beams if b is not None and check_bound(b.rct) == (True, True)]
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
