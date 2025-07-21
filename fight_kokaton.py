@@ -141,19 +141,50 @@ class Bomb:
         screen.blit(self.img, self.rct)
 
 
+class Score:
+    """
+    スコア表示に関するクラス
+    """
+    def __init__(self):
+        self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        self.color = (0, 0, 255)  # 青色
+        self.score = 0
+        self.update_img()
+
+    def update_img(self):
+        """
+        現在のスコアに基づいて文字列Surfaceを更新
+        """
+        self.img = self.fonto.render(f"Score: {self.score}", True, self.color)
+        self.rct = self.img.get_rect()
+        self.rct.center = (100, HEIGHT - 50)
+
+    def add(self, points: int):
+        """
+        スコアに加算し、Surfaceを更新
+        """
+        self.score += points
+        self.update_img()
+
+    def update(self, screen: pg.Surface):
+        """
+        スクリーンにスコアを描画
+        """
+        screen.blit(self.img, self.rct)
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
-    # bomb = Bomb((255, 0, 0), 10)
-    # bombs = []  # 爆弾用の空のリスト
-    # for _ in range(NUM_OF_BOMBS):
-    #     bombs.append(Bomb((255, 0, 0), 10))
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
     beam = None  # ゲーム初期化時にはビームは存在しない
     clock = pg.time.Clock()
     tmr = 0
+
+    score = Score()  # スコア表示初期化
+
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -161,6 +192,7 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
                 beam = Beam(bird)            
+
         screen.blit(bg_img, [0, 0])
         
         for bomb in bombs:
@@ -180,6 +212,8 @@ def main():
                     beam = None
                     bombs[i] = None
                     bird.change_img(6, screen)
+                    score.add(1)  # スコアを1点加算
+
         bombs = [bomb for bomb in bombs if bomb is not None]
 
         key_lst = pg.key.get_pressed()
@@ -188,6 +222,9 @@ def main():
            beam.update(screen) 
         for bomb in bombs:
            bomb.update(screen)
+
+        score.update(screen)  # スコア描画
+
         pg.display.update()
         tmr += 1
         clock.tick(50)
