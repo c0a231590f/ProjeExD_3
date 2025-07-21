@@ -190,8 +190,9 @@ def main():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                # スペースキー押下でBeamクラスのインスタンス生成しリストに追加
+                beams.append(Beam(bird))
+
         screen.blit(bg_img, [0, 0])
         
         for bomb in bombs:
@@ -212,6 +213,9 @@ def main():
                     beams[j] = None  # 衝突したビームをNoneに
                     bombs[i] = None  # 衝突した爆弾をNoneに
                     bird.change_img(6, screen)
+                    score.add(1)  # スコア加算
+
+        # None除去
         bombs = [bomb for bomb in bombs if bomb is not None]
         beams = [beam for beam in beams if beam is not None]
 
@@ -230,7 +234,10 @@ def main():
             beam.update(screen)
 
         for bomb in bombs:
-           bomb.update(screen)
+            bomb.update(screen)
+
+        score.update(screen)
+
         pg.display.update()
         tmr += 1
         clock.tick(50)
